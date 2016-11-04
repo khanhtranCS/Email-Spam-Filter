@@ -35,7 +35,7 @@ public class NaiveBayes {
 		//TODO: Implement the Naive Bayes Classifier
 		File f_ham = new File("/Users/ktran035/Desktop/cse312/NaiveBayes/data/train/ham");
 		File f_spam = new File("/Users/ktran035/Desktop/cse312/NaiveBayes/data/train/ham");
-		
+	
 		processFiles(f_ham, f_spam);
 	}
 	
@@ -53,8 +53,6 @@ public class NaiveBayes {
 			// set of all word in files
 			HashSet<String> word_in_file = tokenSet(files[i]);
 			parseCountData(word_in_file, ham_huh);
-			
-			System.out.println(word_in_file);
 		}
 	}
 	
@@ -68,6 +66,7 @@ public class NaiveBayes {
 				populateDataCount(spam_count, word);
 			}
 		}
+		
 	}
 	
 	/*
@@ -82,4 +81,6 @@ public class NaiveBayes {
 			count_map.put(word, 1.0);
 		}
 	}
+	
+	
 }
