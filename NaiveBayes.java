@@ -3,17 +3,24 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Scanner;
 
 public class NaiveBayes {
 	// spam_count and ham_count, where each store number of files contain a word w
 	public static HashMap<String, Double> spam_count = new HashMap<String, Double>();
 	public static HashMap<String, Double> ham_count = new HashMap<String, Double>();
+	public static HashSet<String> all_data_words = new HashSet<String>();
 	// probablity of spam and ham, with total number of file
 	public static double P_spam;
 	public static double P_ham;
 	public static double total_spam;
 	public static double total_ham;
+	
+	public static String word_highest = "";
+	public static String word_lowest = "";
+	public static double high = Integer.MIN_VALUE;
+	public static double low = Integer.MAX_VALUE;
 	//	This function reads in a file and returns a 
 	//	set of all the tokens. It ignores the subject line
 	//
@@ -55,6 +62,10 @@ public class NaiveBayes {
 		// print of the result 
 		IsSpamOrHam(test_file);
 		
+		getSpamminess();
+		
+		System.out.println(word_highest + " " + word_lowest + " " + high + " " + low);
+		
 	}
 	
 	// print the result after checking if the text email is spam or ham
@@ -81,15 +92,35 @@ public class NaiveBayes {
 		// probability of product set of xi given spam
 		double product_over_spam = 0.0;
 		double product_over_ham = 0.0;
+
 		for (String word: set_str) {
-			product_over_spam += Math.log(probOfWord(word, false));
-			product_over_ham += Math.log(probOfWord(word, true));
+			double prob_word_spam = probOfWord(word, false);
+			double prob_word_ham = probOfWord(word, true);
+			product_over_spam += Math.log(prob_word_spam);
+			product_over_ham += Math.log(prob_word_ham);
 		}
 		double sum_prob_ham = Math.log(P_ham) + product_over_ham;
 		double sum_prob_spam = Math.log(P_spam) + product_over_spam;
 		double result = (Math.log(P_spam) + product_over_spam) / (Math.log(P_spam) + product_over_spam + Math.log(P_ham) + product_over_ham);
 
-		return sum_prob_spam > sum_prob_ham;
+		return sum_prob_spam > Math.log(9) + sum_prob_ham;
+	}
+	
+	// get spamminess
+	public static void getSpamminess() {
+		// scan through all the training data for spam
+		for (String word: all_data_words) {
+			double prob_word_spam = probOfWord(word, false);
+			double prob_word_ham = probOfWord(word, true);
+			if (prob_word_spam / prob_word_ham > high) {
+				high = prob_word_spam / prob_word_ham;
+				word_highest = word;
+			} else if(prob_word_spam / prob_word_ham < low) {
+				low = prob_word_spam / prob_word_ham;
+				word_lowest = word;
+			}
+		}
+		
 	}
 	
 	// find probability of word given that the mail is either spam or ham
@@ -136,7 +167,13 @@ public class NaiveBayes {
 	// parse email file into data format for map
 	public static void parseDataFromFile(File[] files, boolean ham_huh) throws IOException {
 		// process each text file, start i = 1 because of .DS_Store file
-		for (int i = 1; i < files.length; i++) {
+		// so you can change i = 0, if you're using window to make it work
+		for (int i = 0; i < files.length; i++) {
+			String file_name = files[i].getName();
+			// check if this file is not a .txt file
+			if (!file_name.substring(file_name.length() - 3).equals("txt")) {
+				continue;
+			}
 			// set of all word in files
 			HashSet<String> word_in_file = tokenSet(files[i]);
 			parseCountData(word_in_file, ham_huh);
@@ -147,6 +184,7 @@ public class NaiveBayes {
 	// where key is word, value is number of file contain that word
 	public static void parseCountData(HashSet<String> word_in_file, boolean ham_huh) {
 		for (String word: word_in_file) {
+			all_data_words.add(word);
 			if (ham_huh) { // this file is a ham
 				if (ham_count.containsKey(word)) {
 					ham_count.put(word, ham_count.get(word) + 1);
